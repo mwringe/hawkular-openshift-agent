@@ -1,1 +1,12 @@
-## TODO
+== Configuring External Endpoints To Monitor
+
+Hawkular OpenShift Agent is being developed primarily for running within an OpenShift environment. However, strictly speaking, it does not need to run in or monitor OpenShift. You can run Hawkular OpenShift Agent within your own VM, container, or bare metal and configure it to collect metrics from external endpoints you define in the main config.yaml configuration file.
+
+As an example, suppose you want Hawkular OpenShift Agent to scrape metrics from your Prometheus endpoint running at "http://yourcorp.com:9090/metrics" and store those metrics in Hawkular Metrics. You can add an `endpoints` section to your Hawkular OpenShift Agent's configuration file pointing to that endpoint which enables Hawkular OpenShift Agent to begin monitoring that endpoint as soon as Hawkular OpenShift Agent starts. The `endpoints` section of your YAML configuration file could look like this:
+
+[source,yaml]
+----
+- type: "prometheus"
+  url: "http://yourcorp.com:9090/metrics"
+  collection_interval_secs: 300
+----
