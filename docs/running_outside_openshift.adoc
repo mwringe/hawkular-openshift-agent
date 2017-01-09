@@ -1,0 +1,31 @@
+= Running Outside OpenShift
+
+[NOTE]
+Update this section to specify that this is for development only and it is not meant to be deployed this way.
+
+[NOTE]
+You must customize Hawkular OpenShift Agent's configuration file so it can be told things like your Hawkular Metrics server endpoint. If you want the agent to connect to an OpenShift master, you need the OpenShift CA cert file which can be found in your OpenShift installation at `openshift.local.config/master/ca.crt`. If you installed OpenShift in a VM via vagrant, you can use `vagrant ssh` to find this at `/var/lib/origin/openshift.local.config/master/ca.crt`. If you wish to configure the agent with environment variables as opposed to the config file, see link:#environment-variables[below] for the environment variables that the agent looks for.
+
+[source,shell]
+----
+cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
+make install
+make run
+----
+
+The "install" target installs the Hawkular OpenShift Agent executable in your GOPATH /bin directory so you can run it outside of the Makefile:
+
+[source,shell]
+----
+cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
+make install
+${GOPATH}/bin/hawkular-openshift-agent -config <your-config-file>
+----
+
+If you don't want to store your token in the YAML file, you can pass it via an environment variable:
+
+[source,shell]
+----
+K8S_TOKEN=`oc whoami -t` ${GOPATH}/bin/hawkular-openshift-agent -config config.yaml
+----
+

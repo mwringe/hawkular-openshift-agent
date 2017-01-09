@@ -4,97 +4,28 @@
 
 toc::[]
 
-== Introduction
+== About
 
-Hawkular OpenShift Agent is a Hawkular feed implemented in the Go Programming Language. Its main purpose is to monitor a node within an OpenShift environment, collecting metrics from Prometheus and/or Jolokia endpoints deployed in one or more pods within the node. It can also be used to collect metrics from endpoints outside of OpenShift. The agent can be deployed inside the OpenShift node it is monitoring, or outside of OpenShift completely.
+The Hawkular OpenShift Agent is designed to allow developers to gather application metrics that they expose for pods running within an OpenShift cluster. This allows for custom metrics to be collected which are not collected as part of the link:https://github.com/openshift/origin-metrics[OpenShift Metrics] installation.
 
+A pod developer just needs to have a Prometheus and/or Jolokia endpoint which exposes metrics, and configure a yaml configfile to specify how these metrics should be collected. 
+
+If a pod is configured with a configmap loaded volume named `hawkular-openshift-agent`, then the agent will automatically read this configmap to determine which metrics to gather and start storing those metrics to the Hawkular Metrics installed as part of the OpenShift Metrics installation.
+
+////
+*TODO* provide an updated screencast
 Watch link:https://www.youtube.com/watch?v=jvOPlz7lzyM[this quick 10-minute demo] to see the agent in action.
-
-Note that the agent does not collect or store inventory at this time - this is strictly a metric collection and storage agent that integrates with Hawkular Metrics.
-
-=== Docker Image
-
-Hawkular OpenShift Agent is published as a docker image on https://hub.docker.com/r/hawkular/hawkular-openshift-agent[Docker hub at hawkular/hawkular-openshift-agent]
-
-=== License and Copyright
-
-....
-   Copyright 2016 Red Hat, Inc. and/or its affiliates
-   and other contributors.
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-....
-
-== Building
+////
 
 [NOTE]
-These build instructions assume you have the following installed on your system: (1) link:http://golang.org/doc/install[Go Programming Language] which must be at least version 1.7, (2) link:http://git-scm.com/book/en/v2/Getting-Started-Installing-Git[git], (3) link:https://docs.docker.com/installation/[Docker], and (4) make. To run Hawkular OpenShift Agent inside OpenShift after you build it, it is assumed you have a running OpenShift environment available to you. If you do not, you can find a set of link:#setting-up-openshift[instructions on how to set up OpenShift below].
+The agent is a complementary component to link:https://github.com/openshift/origin-metrics[Origin Metrics]. Origin Metrics must be installed in OpenShift before the agent can be used.
 
-To build Hawkular OpenShift Agent:
 
-* Clone this repository inside a GOPATH. These instructions will use the example GOPATH of "/source/go/hawkular-openshift-agent" but you can use whatever you want. Just change the first line of the below instructions to use your GOPATH.
+== Installing
 
-[source,shell]
-----
-export GOPATH=/source/go/hawkular-openshift-agent
-mkdir -p $GOPATH
-cd $GOPATH
-mkdir -p src/github.com/hawkular
-cd src/github.com/hawkular
-git clone git@github.com:hawkular/hawkular-openshift-agent.git
-export PATH=${PATH}:${GOPATH}/bin
-----
+The following sections assume that link:https://github.com/openshift/origin[OpenShift Origin] is already installed with link:https://github.com/openshift/origin-metrics[metrics] enabled.
 
-* Install Glide - a Go dependency management tool that Hawkular OpenShift Agent uses to build itself
-
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make install-glide
-----
-
-* Tell Glide to install the Hawkular OpenShift Agent dependencies
-
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make install-deps
-----
-
-* Build Hawkular OpenShift Agent
-
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make build
-----
-
-* At this point you can run the Hawkular OpenShift Agent tests
-
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make test
-----
-
-== Running
-
-=== Running Inside OpenShift
-
-==== Setting up OpenShift
-The following section assumes that the user has link:https://github.com/openshift/origin[OpenShift Origin] installed with link:https://github.com/openshift/origin-metrics[metrics] enabled.
-
-The link:https://docs.openshift.org/latest/welcome/index.html[OpenShift Origin Documentation] will outline all the steps required. Please make sure to follow the link:https://docs.openshift.org/latest/install_config/cluster_metrics.html[steps involved to deploying metrics].
+If you have not yet installed metrics, the link:https://docs.openshift.org/latest/welcome/index.html[OpenShift Origin Documentation] will outline all the link:https://docs.openshift.org/latest/install_config/cluster_metrics.html[steps required].
 
 If you wish to forgo installing and configuring OpenShift with metrics yourself, the `oc cluster up` command can be used to get an instance of OpenShift Origin with metrics enabled:
 
@@ -104,22 +35,9 @@ oc cluster up --metrics
 ----
 
 [NOTE]
-In order to install the agent into OpenShift you will need to have admin priviledges for the OpenShift cluster.
-
-==== Building the Docker Image
-
-Create the Hawkular OpenShift Agent docker image through the "docker" make target:
-
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make docker
-----
-
-==== Deploying the Agent Inside OpenShift
-
-[NOTE]
 The following sections assume that the `oc` command is available in the user's path and that the user is logged in as a user with cluster admin privileges.
+
+=== Deploying the Agent
 
 [TIP]
 ====
@@ -138,6 +56,11 @@ oc create -f deploy/openshift/hawkular-openshift-agent-configmap.yaml -n openshi
 oc process -f deploy/openshift/hawkular-openshift-agent.yaml | oc create -n openshift-infra -f -
 ----
 
+==== Advanced Deployment Options
+The previous instructions will deploy the agent with the recommended default configuration. For most users this will be the configuration you will want to deploy with.
+
+If you wish to provide more customization to how the agent functions, please see the link:docs/configuration.adoc[advanced configuration] page.
+
 ==== Undeploying the Agent
 
 If you want to remove the agent from your OpenShift environment, you can do so by running the following command:
@@ -154,34 +77,29 @@ Alternatively, the following will also perform the same task from the Makefile:
 make openshift-undeploy
 ----
 
-=== Running Outside OpenShift
+== Running the Examples
 
-[NOTE]
-You must customize Hawkular OpenShift Agent's configuration file so it can be told things like your Hawkular Metrics server endpoint. If you want the agent to connect to an OpenShift master, you need the OpenShift CA cert file which can be found in your OpenShift installation at `openshift.local.config/master/ca.crt`. If you installed OpenShift in a VM via vagrant, you can use `vagrant ssh` to find this at `/var/lib/origin/openshift.local.config/master/ca.crt`. If you wish to configure the agent with environment variables as opposed to the config file, see link:#environment-variables[below] for the environment variables that the agent looks for.
+Currently there are two example pods which deploy a pod with a Prometheus endpoint and with a Jolokia endpoint. These applications can be found in the link:examples[examples] directory.
 
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make install
-make run
-----
+These examples can be used as a template to determine how to deploy your own pods with custom metrics.
 
-The "install" target installs the Hawkular OpenShift Agent executable in your GOPATH /bin directory so you can run it outside of the Makefile:
+=== Prometheus Example
 
-[source,shell]
-----
-cd ${GOPATH}/src/github.com/hawkular/hawkular-openshift-agent
-make install
-${GOPATH}/bin/hawkular-openshift-agent -config <your-config-file>
-----
+*TODO*
 
-If you don't want to store your token in the YAML file, you can pass it via an environment variable:
+=== Jolokia Example
 
-[source,shell]
-----
-K8S_TOKEN=`oc whoami -t` ${GOPATH}/bin/hawkular-openshift-agent -config config.yaml
-----
+*TODO*
 
+== Monitoring your own Applications
+
+
+== Building and Contributing
+For information on how to build your own agent, please see link:docs/building.adoc[building] documentation.
+
+If you wish to contribute to this project, please see the link:docs/contributing.adoc[contributing] page for information on how to get involved.
+
+////
 == Configuring OpenShift
 
 When Hawkular OpenShift Agent is monitoring resources running on an OpenShift node, it looks at volumes and config maps to know what to monitor. In effect, the pods tell Hawkular OpenShift Agent what to monitor, and Hawkular OpenShift Agent does it. (Note that where "OpenShift" is mentioned, it is normally synonymous with "Kubernetes" because Hawkular OpenShift Agent is really interfacing with the underlying Kubernetes software that is running in OpenShift)
@@ -637,3 +555,4 @@ tags:
   my-pod-name: ${POD:name}
   some-env-tag: var is ${SOME_ENV_VAR}
 ----
+////
